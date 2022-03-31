@@ -1,0 +1,75 @@
+# Dependency directories
+node_modules
+node_modules/
+
+# Optional npm cache directory
+.npm
+.npmrc
+
+# dotenv environment variables file
+.env
+.env.prod
+.env.dev
+.env.test
+
+# Build
+build
+dist
+types
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Logs
+logs
+*.log
+
+npm-debug.log
+npm-error.log
+npm-warning.log
+
+yarn-debug.log
+yarn-error.log
+yarn-warning.log
+
+# Lock package
+package-lock.json
+
+# Coverage directory
+coverage
+*.lcov
+
+# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
+.grunt
+
+# Bower dependency directory (https://bower.io/)
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons (https://nodejs.org/api/addons.html)
+build/Release
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional eslint cache
+.eslintcache
+
+
+# Yarn Integrity file
+.yarn-integrity
+
+# apify directory
+apify_storage
+
+#vscode debug
+.vscode
+
+# dev directory
+.idea
+.yarn
+
+#OS
+.DS_Store
