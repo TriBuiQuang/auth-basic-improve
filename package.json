@@ -1,5 +1,5 @@
 {
-   "name": "@thekid000/auth-basic-improve",
+   "name": "auth-basic-improve",
    "version": "0.0.2",
    "description": "node.js basic auth parser",
    "author": "Tri Bui Quang",
@@ -12,7 +12,7 @@
       "authentication"
    ],
    "main": "index.js",
-   "typings": "index.d.ts",
+   "types": "index.d.ts",
    "engines": {
       "node": ">=14"
    },
@@ -24,9 +24,16 @@
    "bugs": {
       "url": "https://github.com/TriBuiQuang/auth-basic-improve/issues"
    },
+   "files": [
+      "index.js",
+      "app.js",
+      "env.js",
+      "interfaces/*",
+      "utils/*"
+   ],
    "scripts": {
-      "build": "rm -rf ./dist && tsc --project tsconfig.json && tscpaths -p tsconfig.json -s ./src/ -o ./dist",
-      "test": "jest",
+      "build": "rm -rf ./dist && tsc --project tsconfig.prod.json && tscpaths -p tsconfig.prod.json -s ./src/ -o ./dist",
+      "test": "jest --testPathPattern=./tests",
       "test:coverage": "jest --coverage",
       "test:unit": "jest --testPathPattern=./tests/unit",
       "lint": "eslint . --ext .ts,.tsx --fix",

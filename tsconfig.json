@@ -30,6 +30,6 @@
       "types": ["node", "jest"],
       "skipLibCheck": true
    },
-   "include": ["src/**/*.ts", "config/*.ts", "tests/**/*.ts", "tests/**/**/*.ts"],
-   "exclude": ["node_modules", "**/*.spec.ts"]
+   "include": ["src/**/*.ts", "tests/**/*.ts", "tests/**/**/*.ts"],
+   "exclude": ["node_modules", "**/*.spec.ts", "dist"]
 }
