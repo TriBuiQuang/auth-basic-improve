@@ -1,6 +1,6 @@
 {
-   "name": "auth-basic-improve",
-   "version": "0.0.1",
+   "name": "@thekid000/auth-basic-improve",
+   "version": "0.0.2",
    "description": "node.js basic auth parser",
    "author": "Tri Bui Quang",
    "license": "MIT",
@@ -15,6 +15,14 @@
    "typings": "index.d.ts",
    "engines": {
       "node": ">=14"
+   },
+   "repository": {
+      "type": "git",
+      "url": "git+https://github.com/TriBuiQuang/auth-basic-improve.git"
+   },
+   "homepage": "https://github.com/TriBuiQuang/auth-basic-improve/blob/main/README.md",
+   "bugs": {
+      "url": "https://github.com/TriBuiQuang/auth-basic-improve/issues"
    },
    "scripts": {
       "build": "rm -rf ./dist && tsc --project tsconfig.json && tscpaths -p tsconfig.json -s ./src/ -o ./dist",
