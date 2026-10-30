@@ -14,7 +14,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "repository": {
     "type": "git",
@@ -64,7 +64,9 @@
     {
       "name": "auth-basic-improve",
       "path": "dist/index.js",
-      "ignore": ["express"]
+      "ignore": [
+        "express"
+      ]
     }
   ]
 }
