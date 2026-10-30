@@ -22,7 +22,38 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Build
+        run: yarn build
+
+      - name: Check package size
+        run: yarn size --json
+
+      - name: Check base branch compatibility
+        id: baseline
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch origin "$BASE_REF" --depth=1
+          node <<'NODE'
+          const fs = require("node:fs");
+          const { execFileSync } = require("node:child_process");
+          const packageJson = JSON.parse(
+            execFileSync("git", ["show", `origin/${process.env.BASE_REF}:package.json`], {
+              encoding: "utf8",
+            }),
+          );
+          const compatible =
+            packageJson.packageManager?.startsWith("yarn@4.") &&
+            (packageJson.dependencies?.["@size-limit/preset-small-lib"] ||
+              packageJson.devDependencies?.["@size-limit/preset-small-lib"]);
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `compatible=${compatible ? "true" : "false"}\n`,
+          );
+          NODE
+
       - uses: andresz1/size-limit-action@v1
+        if: steps.baseline.outputs.compatible == 'true'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           skip_step: install
