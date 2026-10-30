@@ -1,5 +1,5 @@
 {
-  "name": "auth-basic-improve",
+  "name": "@thekid000/auth-basic-improve",
   "version": "1.0.0",
   "description": "node.js basic auth parser",
   "author": "Tri Bui Quang",

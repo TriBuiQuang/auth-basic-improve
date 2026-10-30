@@ -1,4 +1,4 @@
-# Project Structure — `auth-basic-improve`
+# Project Structure — `@thekid000/auth-basic-improve`
 
 This document provides a detailed breakdown of every source file, its purpose, dependencies, and how modules relate to each other.
 
@@ -43,7 +43,7 @@ auth-basic-improve/
 
 ### `src/index.ts` — Main Entry Point
 
-**Purpose**: Library entry point for `import authBasicImprove from "auth-basic-improve"`.
+**Purpose**: Library entry point for `import authBasicImprove from "@thekid000/auth-basic-improve"`.
 
 **Exports**:
 - `export * from "./app"` — re-exports everything from `app.ts`

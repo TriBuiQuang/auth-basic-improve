@@ -1,4 +1,4 @@
-# auth-basic-improve
+# @thekid000/auth-basic-improve
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js >= 24](https://img.shields.io/badge/Node.js-%3E=24-brightgreen)](https://nodejs.org/)
@@ -47,10 +47,10 @@ A lightweight, TypeScript-native **Basic Authentication parser** for Node.js & E
 
 ```bash
 # Using Yarn (recommended, packageManager: yarn@4.5.0)
-yarn add auth-basic-improve
+yarn add @thekid000/auth-basic-improve
 
 # Using npm
-npm install auth-basic-improve
+npm install @thekid000/auth-basic-improve
 ```
 
 **Requirements**: Node.js `>= 24`
@@ -64,7 +64,7 @@ npm install auth-basic-improve
 Extract credentials directly from a base64-encoded string:
 
 ```typescript
-import { parse } from "auth-basic-improve";
+import { parse } from "@thekid000/auth-basic-improve";
 
 const result = parse("Basic Zm9vOmJhcg==");
 // Returns: { name: "foo", pass: "bar" }
@@ -77,7 +77,7 @@ const result = parse("Basic Zm9vOmJhcg==");
 Parse the `Authorization` header from an Express `Request` object:
 
 ```typescript
-import { auth } from "auth-basic-improve";
+import { auth } from "@thekid000/auth-basic-improve";
 
 app.get("/protected", (req, res) => {
   const credentials = auth(req);
@@ -97,7 +97,7 @@ app.get("/protected", (req, res) => {
 Build a full authentication middleware with the named `buildMiddleware` export:
 
 ```typescript
-import { buildMiddleware } from "auth-basic-improve";
+import { buildMiddleware } from "@thekid000/auth-basic-improve";
 ```
 
 #### Static Users
@@ -204,7 +204,7 @@ const authMiddleware = buildMiddleware({
 Use timing-safe byte comparison to reduce content-dependent timing differences:
 
 ```typescript
-import { safeCompare } from "auth-basic-improve";
+import { safeCompare } from "@thekid000/auth-basic-improve";
 
 const myAuthorizer = (username: string, password: string): boolean => {
   return (
