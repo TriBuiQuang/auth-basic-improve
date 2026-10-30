@@ -1,7 +1,7 @@
 # auth-basic-improve
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js >= 18](https://img.shields.io/badge/Node.js-%3E=18-brightgreen)](https://nodejs.org/)
+[![Node.js >= 22](https://img.shields.io/badge/Node.js-%3E=22-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4%2B-blue)](https://www.typescriptlang.org/)
 
 A lightweight, TypeScript-native **Basic Authentication parser** for Node.js & Express.js.
@@ -53,7 +53,7 @@ yarn add auth-basic-improve
 npm install auth-basic-improve
 ```
 
-**Requirements**: Node.js `>= 18`
+**Requirements**: Node.js `>= 22`
 
 ---
 
@@ -68,7 +68,7 @@ import { parse } from "auth-basic-improve";
 
 const result = parse("Basic Zm9vOmJhcg==");
 // Returns: { name: "foo", pass: "bar" }
-// Returns "" for invalid/malformed strings
+// Returns undefined for invalid/malformed strings
 ```
 
 ### 2. Extract Auth from Express Request
@@ -81,7 +81,7 @@ import { auth } from "auth-basic-improve";
 app.get("/protected", (req, res) => {
   const credentials = auth(req);
 
-  if (typeof credentials === "string") {
+  if (!credentials) {
     return res.status(401).send("Unauthorized");
   }
 
@@ -93,10 +93,10 @@ app.get("/protected", (req, res) => {
 
 ### 3. Express Middleware
 
-Build a full authentication middleware with `buildMiddleware` (default export):
+Build a full authentication middleware with the named `buildMiddleware` export:
 
 ```typescript
-import basicAuth from "auth-basic-improve/expressBasicAuth";
+import { buildMiddleware } from "auth-basic-improve";
 ```
 
 #### Static Users
@@ -104,7 +104,7 @@ import basicAuth from "auth-basic-improve/expressBasicAuth";
 Define users directly in the options:
 
 ```typescript
-const authMiddleware = basicAuth({
+const authMiddleware = buildMiddleware({
   challenge: false,
   users: { Admin: "secret1234", User: "password123" },
 });
@@ -124,7 +124,7 @@ const myAuthorizer = (username: string, password: string): boolean => {
   return username.startsWith("A") && password.startsWith("secret");
 };
 
-const authMiddleware = basicAuth({ authorizer: myAuthorizer });
+const authMiddleware = buildMiddleware({ authorizer: myAuthorizer });
 ```
 
 #### Custom Asynchronous Authorizer
@@ -144,7 +144,7 @@ const myAsyncAuthorizer = (
   });
 };
 
-const authMiddleware = basicAuth({
+const authMiddleware = buildMiddleware({
   authorizeAsync: true,
   authorizer: myAsyncAuthorizer,
 });
@@ -155,7 +155,7 @@ const authMiddleware = basicAuth({
 Send a `WWW-Authenticate` header to trigger browser credential prompts:
 
 ```typescript
-const authMiddleware = basicAuth({
+const authMiddleware = buildMiddleware({
   challenge: true,
   users: { Admin: "secret1234" },
 });
@@ -165,7 +165,7 @@ const authMiddleware = basicAuth({
 Custom realm:
 
 ```typescript
-const authMiddleware = basicAuth({
+const authMiddleware = buildMiddleware({
   challenge: true,
   realm: "My Protected Area",
   users: { Admin: "secret1234" },
@@ -179,17 +179,17 @@ Control the 401 response content:
 
 ```typescript
 // Static string
-const authMiddleware = basicAuth({
+const authMiddleware = buildMiddleware({
   unauthorizedResponse: "Access Denied",
 });
 
 // JSON object
-const authMiddleware = basicAuth({
+const authMiddleware = buildMiddleware({
   unauthorizedResponse: { error: "Unauthorized", code: 401 },
 });
 
 // Dynamic function
-const authMiddleware = basicAuth({
+const authMiddleware = buildMiddleware({
   unauthorizedResponse: (req) =>
     req.auth
       ? `Credentials ${req.auth.user}:${req.auth.password} rejected`
@@ -203,12 +203,12 @@ const authMiddleware = basicAuth({
 Use timing-safe string comparison to prevent timing attacks:
 
 ```typescript
-import basicAuth from "auth-basic-improve/expressBasicAuth";
+import { safeCompare } from "auth-basic-improve";
 
 const myAuthorizer = (username: string, password: string): boolean => {
   return (
-    basicAuth.safeCompare(username, "ExpectedUser") &&
-    basicAuth.safeCompare(password, "ExpectedPass")
+    safeCompare(username, "ExpectedUser") &&
+    safeCompare(password, "ExpectedPass")
   );
 };
 ```
