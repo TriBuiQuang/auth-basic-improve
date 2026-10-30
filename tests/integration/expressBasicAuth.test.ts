@@ -1,8 +1,8 @@
 import express, { Request, Response } from "express";
 import supertest from "supertest";
 
-import basicAuth from "@/expressBasicAuth";
-import { IBasicAuthedRequest } from "@/interfaces/expressBasicAuth.interface";
+import basicAuth from "../../src/expressBasicAuth";
+import { IBasicAuthedRequest } from "../../src/interfaces/expressBasicAuth.interface";
 
 const app = express();
 
@@ -21,7 +21,11 @@ const staticUserAuth = basicAuth({
 const customAuthorizerAuth = basicAuth({ authorizer: myAuthorizer });
 
 // Same but asynchronous
-const myAsyncAuthorizer = (username: string, password: string, cb: any) => {
+const myAsyncAuthorizer = (
+   username: string,
+   password: string,
+   cb: (err: Error | null, result: boolean) => void,
+) => {
    if (username.startsWith("A") && password.startsWith("secret")) return cb(null, true);
    return cb(null, false);
 };
@@ -41,6 +45,16 @@ function getUnauthorizedResponse(req: IBasicAuthedRequest) {
 // Uses a custom (synchronous) authorizer function
 const customCompareAuth = basicAuth({
    authorizer: myComparingAuthorizer,
+});
+
+// Promise-based async authorizer
+const myPromiseAuthorizer = async (username: string, password: string): Promise<boolean> => {
+   if (username.startsWith("P") && password.startsWith("secret")) return true;
+   return false;
+};
+
+const promiseAuthorizerAuth = basicAuth({
+   authorizer: myPromiseAuthorizer,
 });
 
 // Same, but sends a basic auth challenge header when authorization fails
@@ -94,6 +108,10 @@ app.get("/custom", customAuthorizerAuth, (req: Request, res: Response) => {
 });
 
 app.get("/custom-compare", customCompareAuth, (req: Request, res: Response) => {
+   res.status(200).send("You passed");
+});
+
+app.get("/promise", promiseAuthorizerAuth, (req: Request, res: Response) => {
    res.status(200).send("You passed");
 });
 
@@ -161,7 +179,7 @@ describe("express-basic-auth", () => {
          supertest(app)
             .get(endpoint)
             .auth("dude", "stuff")
-            .expect((res: any) => {
+            .expect((res: { headers: Record<string, string> }) => {
                if (res.headers["WWW-Authenticate"])
                   throw new Error("Response should not have a challenge");
             })
@@ -211,6 +229,25 @@ describe("express-basic-auth", () => {
       });
    });
 
+   describe("with Promise-based async authorizer", () => {
+      const endpoint = "/promise";
+
+      it("should reject on missing header", (done) => {
+         supertest(app).get(endpoint).expect(401, done);
+      });
+
+      it("should reject on wrong credentials", (done) => {
+         supertest(app).get(endpoint).auth("dude", "stuff").expect(401, done);
+      });
+
+      it("should accept fitting credentials", (done) => {
+         supertest(app).get(endpoint).auth("Peter", "secretkey").expect(200, "You passed", done);
+      });
+
+      it("should reject credentials not matching the pattern", (done) => {
+         supertest(app).get(endpoint).auth("Alice", "secret123").expect(401, done);
+      });
+   });
    describe("async authorizer", () => {
       const endpoint = "/async";
 

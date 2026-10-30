@@ -7,20 +7,29 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node: ['14.x', '16.x']
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        node: ['24.x', '26.x']
+        os: [ubuntu-latest]
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Use Node ${{ matrix.node }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Install deps and build (with cache)
-        uses: bahmutov/npm-install@v1
+      - name: Set up Yarn
+        run: |
+          if ! command -v corepack >/dev/null 2>&1; then
+            npm install --global corepack@0.34.5
+          fi
+          mkdir -p "$HOME/.local/bin"
+          corepack enable --install-directory "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies
+        run: yarn install --immutable
 
       - name: Lint
         run: yarn lint

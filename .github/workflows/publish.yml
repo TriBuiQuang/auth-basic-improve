@@ -1,27 +1,40 @@
 name: Publish
 on:
   release:
-    # Push to master will deploy a beta version
-    push:
-        branches: [ master, renovate/** ]
-    # PR to master branch will skip deployment
-    pull_request:
-        branches: [ master ]
-    # A release via GitHub releases will deploy the latest version
-    release:
-        types: [ published ]
+    types: [published]
+
+permissions:
+  contents: read
+
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 14
+          node-version: 24
           registry-url: https://registry.npmjs.org/
-      - run: npm install
-      - run: npm run build
-      - run: npm run test
-      - run: npm publish --access public
+
+      - name: Set up Yarn
+        run: |
+          if ! command -v corepack >/dev/null 2>&1; then
+            npm install --global corepack@0.34.5
+          fi
+          mkdir -p "$HOME/.local/bin"
+          corepack enable --install-directory "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build
+        run: yarn build
+
+      - name: Test
+        run: yarn test --ci --coverage --maxWorkers=2
+
+      - name: Publish package
+        run: npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

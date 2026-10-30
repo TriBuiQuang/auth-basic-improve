@@ -1,41 +1,113 @@
-import assert from "assert";
 import { timingSafeEqual } from "crypto";
 
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 
-import { auth } from "@/basicAuth";
-import { IBasicAuthedRequest, IbuildMiddleware } from "@/interfaces/expressBasicAuth.interface";
+import { auth, Credentials } from "../basicAuth";
+import type {
+   AsyncAuthorizerFn,
+   AuthorizerFn,
+   IbuildMiddleware,
+   PromiseAuthorizerFn,
+   RealmFn,
+} from "../interfaces/expressBasicAuth.interface";
+
 /**
+ * Performs a timing-safe comparison of two strings using `crypto.timingSafeEqual`.
  *
+ * The byte comparison does not stop at the first differing byte. Its runtime still
+ * depends on the longer input's byte length, so this is not constant-time across lengths.
+ *
+ * @param userInput - The first string to compare (user input).
+ * @param secret - The second string to compare (stored secret).
+ * @returns `true` if both strings are identical and have the same length; `false` otherwise.
+ *
+ * @example
+ * ```typescript
+ * const isValid = safeCompare("myToken", "myToken"); // true
+ * const isInvalid = safeCompare("wrong", "correct"); // false
+ * ```
  */
-export const safeCompare = (userInput: string, secret: string) => {
+export const safeCompare = (userInput: string, secret: string): boolean => {
    const userInputLength = Buffer.byteLength(userInput);
    const secretLength = Buffer.byteLength(secret);
 
-   const userInputBuffer = Buffer.alloc(userInputLength, 0, "utf8");
-   userInputBuffer.write(userInput);
-   const secretBuffer = Buffer.alloc(userInputLength, 0, "utf8");
-   secretBuffer.write(secret);
+   // Compare the full length of the longer input even when the lengths differ.
+   const maxLen = Math.max(userInputLength, secretLength);
+   const userInputBytes = new Uint8Array(maxLen);
+   const secretBytes = new Uint8Array(maxLen);
+   Buffer.from(userInput, "utf8").copy(userInputBytes);
+   Buffer.from(secret, "utf8").copy(secretBytes);
 
-   return !!(timingSafeEqual(userInputBuffer, secretBuffer) && userInputLength === secretLength);
+   // Zero-filled padding can make unequal-length inputs compare equal, so check
+   // the original byte lengths after doing the timing-safe byte comparison.
+   const match = timingSafeEqual(userInputBytes, secretBytes);
+   return match && userInputLength === secretLength;
 };
 
 /**
- * Function check `option` if is function, if undefined return default value, if not a function return it self with function
+ * Normalizes an option into a function that returns a value.
+ *
+ * - If `option` is `undefined`, returns a function that returns `defaultValue`.
+ * - If `option` is a non-function value, returns a function that returns that value.
+ * - If `option` is already a function, returns it as-is.
+ *
+ * @param option - The option to normalize (may be `undefined`, a value, or a function).
+ * @param defaultValue - The default value to use when `option` is `undefined`.
+ * @returns A function that resolves to the appropriate value.
+ *
+ * @example
+ * ```typescript
+ * // Returns () => "default realm"
+ * const fn = ensureFunction(undefined, "default realm");
+ *
+ * // Returns () => "static realm"
+ * const fn2 = ensureFunction("static realm");
+ *
+ * // Returns the original function
+ * const fn3 = ensureFunction((req) => `realm for ${req.url}`);
+ * ```
  */
-const ensureFunction = (option?: unknown, defaultValue?: string) => {
-   if (option === undefined) return () => defaultValue;
+const ensureFunction = (
+   option?: string | ((...args: unknown[]) => unknown),
+   defaultValue?: string,
+): ((...args: unknown[]) => string | undefined) => {
+   if (option === undefined)
+      return (() => defaultValue) as (...args: unknown[]) => string | undefined;
 
-   if (typeof option !== "function") return () => option;
+   if (typeof option !== "function")
+      return (() => option as string) as (...args: unknown[]) => string;
 
-   return option;
+   return option as (...args: unknown[]) => string;
 };
 
+/**
+ * Creates an Express authentication middleware with configurable options.
+ *
+ * Supports static user validation, custom synchronous/async authorizers,
+ * timing-safe comparisons, configurable challenge headers, and custom response bodies.
+ *
+ * @param options - Configuration options for the middleware.
+ * @returns An Express middleware function `(req, res, next) => void`.
+ *
+ * @example
+ * ```typescript
+ * const authMiddleware = buildMiddleware({
+ *    challenge: false,
+ *    users: { Admin: "secret1234" },
+ * });
+ *
+ * app.get("/admin", authMiddleware, (req, res) => {
+ *    res.send("Welcome, Admin!");
+ * });
+ * ```
+ */
 function buildMiddleware(options: IbuildMiddleware) {
-   const challenge = options.challenge !== undefined ? !!options.challenge : false;
-   const users = options.users || {};
+   const challenge = typeof options.challenge === "boolean" ? options.challenge : false;
 
-   const staticUsersAuthorizer = (username: string, password: string) => {
+   // Clone users object to prevent mutation between requests (security hardening)
+   const users: Record<string, string> = { ...options.users };
+
+   const staticUsersAuthorizer = (username: string, password: string): boolean => {
       const keys = Object.keys(users);
       for (let i = 0; i < keys.length; i += 1) {
          const key = keys[i];
@@ -45,56 +117,104 @@ function buildMiddleware(options: IbuildMiddleware) {
       return false;
    };
 
-   const authorizer = options.authorizer || staticUsersAuthorizer;
-   const isAsync = options.authorizeAsync !== undefined ? !!options.authorizeAsync : false;
-   const getResponseBody = ensureFunction(options.unauthorizedResponse, "");
-   const realm = ensureFunction(options.realm);
+   const authorizer: AuthorizerFn | AsyncAuthorizerFn = options.authorizer
+      ? (options.authorizer as AuthorizerFn | AsyncAuthorizerFn)
+      : staticUsersAuthorizer;
+   const isAsync = typeof options.authorizeAsync === "boolean" ? options.authorizeAsync : false;
+   const getResponseBody = ensureFunction(
+      options.unauthorizedResponse as string | ((...args: unknown[]) => unknown),
+      "",
+   ) as
+      ((...args: unknown[]) => string | Record<string, unknown>) | ((...args: unknown[]) => string);
+   const realm = ensureFunction(options.realm as string | ((...args: unknown[]) => unknown)) as (
+      ...args: unknown[]
+   ) => string | undefined;
 
-   assert(
-      typeof users === "object",
-      `Expected an object for the basic auth users, found ${typeof users} instead`
-   );
-   assert(
-      typeof authorizer === "function",
-      `Expected a function for the basic auth authorizer, found ${typeof authorizer} instead`
-   );
+   if (typeof users !== "object") {
+      throw new Error(`Expected an object for the basic auth users, found ${typeof users} instead`);
+   }
+   if (typeof authorizer !== "function") {
+      throw new Error(
+         `Expected a function for the basic auth authorizer, found ${typeof authorizer} instead`,
+      );
+   }
 
-   return function authMiddleware(req: Request, res: Response, next: NextFunction) {
+   return function authMiddleware(
+      req: Request,
+      res: Response,
+      next: NextFunction,
+   ): void | Promise<void> {
       function unauthorized() {
          if (challenge) {
             let challengeString = "Basic";
-            const realmName = realm(req);
+            const realmName = (realm as RealmFn)(req);
 
             if (realmName) challengeString += ` realm="${realmName}"`;
 
             res.set("WWW-Authenticate", challengeString);
          }
 
-         // TODO: Allow response body to be JSON (maybe autodetect?)
          const response = getResponseBody(req);
 
-         if (typeof response === "string") return res.status(401).send(response);
-
-         return res.status(401).json(response);
+         if (typeof response === "string") {
+            res.status(401).send(response);
+         } else {
+            res.status(401).json(response);
+         }
       }
-      function authorizerCallback(err: Record<string, string>, approved: boolean) {
-         assert.ifError(err);
+
+      function authorizerCallback(err: Error | null, approved: boolean): void {
+         // Properly propagate errors through Express error-handling middleware
+         if (err) return next(err);
 
          if (approved) return next();
 
          return unauthorized();
       }
-      const authentication = auth(req);
+
+      const authentication: Credentials | undefined = auth(req);
 
       if (!authentication) return unauthorized();
-      const request = req as IBasicAuthedRequest;
-      request.auth = {
+
+      // Attach parsed credentials to the request object.
+      // The `auth` property is declared via module augmentation in `express.d.ts`,
+      // so this is type-safe without any `as` assertions.
+      req.auth = {
          password: authentication.pass,
          user: authentication.name,
       };
 
-      if (isAsync) return authorizer(authentication.name, authentication.pass, authorizerCallback);
-      if (!authorizer(authentication.name, authentication.pass)) return unauthorized();
+      if (isAsync) {
+         // Callback-based async authorizer (3 args)
+         return (
+            authorizer as (
+               username: string,
+               password: string,
+               cb: (err: Error | null, result: boolean) => void,
+            ) => void
+         )(authentication.name, authentication.pass, authorizerCallback);
+      }
+
+      // For sync and Promise-based authorizers, call with 2 args.
+      // We narrow the type by checking the return value at runtime.
+      const result: boolean | Promise<boolean> = (authorizer as AuthorizerFn | PromiseAuthorizerFn)(
+         authentication.name,
+         authentication.pass,
+      );
+
+      // Detect Promise-based async authorizers by checking if the result is a Promise
+      if (result instanceof Promise) {
+         return (result as Promise<boolean>).then(
+            (approved) => {
+               if (approved) return next();
+               return unauthorized();
+            },
+            (err: unknown) => next(err),
+         );
+      }
+
+      // Synchronous authorizer
+      if (!result) return unauthorized();
 
       return next();
    };

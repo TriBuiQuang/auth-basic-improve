@@ -1,12 +1,16 @@
 import { Request } from "express";
 
-export interface IAuthObject {
-   name?: string;
-   pass?: string;
+/**
+ * Object to represent user credentials extracted from a Basic Auth header.
+ */
+export interface Credentials {
+   name: string;
+   pass: string;
 }
 
-export type TAuth = IAuthObject | string;
-
+/**
+ * Request type with an optional `authorization` header.
+ */
 export interface IRequestHeaderAuthorization extends Request {
-   headers: { authorization: string };
+   headers: { authorization?: string };
 }
