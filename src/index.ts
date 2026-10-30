@@ -1,12 +1,8 @@
 import * as authBasicImprove from "./app";
 
-export * from "./app";
+export { auth } from "./basicAuth/index";
 export { parse, format, Credentials } from "./basicAuth/index";
-export type {
-   IAuthObject,
-   TAuth,
-   IRequestHeaderAuthorization,
-} from "./interfaces/basicAuth.interface";
+export type { Credentials as ICredentials, IRequestHeaderAuthorization } from "./basicAuth/index";
 export type {
    IBasicAuthedRequest,
    IbuildMiddleware,

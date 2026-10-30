@@ -1,5 +1,15 @@
 import { describe, it } from "@jest/globals";
 
+/* eslint-disable no-undef */
+/**
+ * GlobalTextDecoder — minimal interface matching Node.js global TextDecoder.
+ * Available as a global in Node.js 16+.
+ */
+declare const TextDecoder: {
+   new (label?: string): { decode(bytes: Uint8Array): string };
+};
+/* eslint-enable no-undef */
+
 type Uint8ArrayWithBase64 = typeof Uint8Array & {
    fromBase64?: (str: string) => Uint8Array;
 };

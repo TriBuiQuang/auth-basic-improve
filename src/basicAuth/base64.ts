@@ -9,6 +9,24 @@ type BufferLike = {
    ): { toString(encoding: "utf-8" | "base64"): string };
 };
 
+/* eslint-disable no-undef */
+/**
+ * GlobalTextEncoder — minimal interface matching Node.js global TextEncoder.
+ * Available as a global in Node.js 16+.
+ */
+declare const TextEncoder: {
+   new (): { encode(str: string): Uint8Array };
+};
+
+/**
+ * GlobalTextDecoder — minimal interface matching Node.js global TextDecoder.
+ * Available as a global in Node.js 16+.
+ */
+declare const TextDecoder: {
+   new (label?: string): { decode(bytes: Uint8Array): string };
+};
+/* eslint-enable no-undef */
+
 export const base64 = (() => {
    if (typeof Buffer !== "undefined") {
       return {

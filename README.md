@@ -1,7 +1,7 @@
 # auth-basic-improve
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js >= 24](https://img.shields.io/badge/Node.js-%3E=24-brightgreen)](https://nodejs.org/)
+[![Node.js >= 18](https://img.shields.io/badge/Node.js-%3E=18-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4%2B-blue)](https://www.typescriptlang.org/)
 
 A lightweight, TypeScript-native **Basic Authentication parser** for Node.js & Express.js.
@@ -53,7 +53,7 @@ yarn add auth-basic-improve
 npm install auth-basic-improve
 ```
 
-**Requirements**: Node.js `>= 24`
+**Requirements**: Node.js `>= 18`
 
 ---
 
@@ -217,19 +217,19 @@ const myAuthorizer = (username: string, password: string): boolean => {
 
 ## API Reference
 
-### `parse(str?: string) => IAuthObject | string`
+### `parse(str: string) => Credentials | undefined`
 
-Parses a base64-encoded Basic Auth string.
+Parses a base64-encoded Basic Authentication string into `{ name, pass }`.
 
 | Parameter | Type     | Required | Description           |
 | --------- | -------- | -------- | --------------------- |
-| `str`     | `string` | No       | Base64-encoded auth string |
+| `str`     | `string` | Yes      | Base64-encoded auth string |
 
-**Returns**: `{ name: string, pass: string }` on success, `""` on failure.
+**Returns**: `{ name: string, pass: string }` on success, `undefined` on failure.
 
 ---
 
-### `auth(req?: Request) => IAuthObject | string`
+### `auth(req: Request) => Credentials | undefined`
 
 Extracts and parses the `Authorization` header from an Express request.
 
@@ -237,7 +237,7 @@ Extracts and parses the `Authorization` header from an Express request.
 | --------- | --------- | -------- | ---------------------- |
 | `req`     | `Request` | Yes      | Express request object |
 
-**Returns**: `{ name: string, pass: string }` on success, `""` on failure.
+**Returns**: `{ name: string, pass: string }` on success, `undefined` on failure.
 
 ---
 
@@ -269,21 +269,20 @@ src/
 ├── index.ts                        # Main entry point — re-exports everything
 ├── app.ts                          # Aggregates core auth module
 ├── basicAuth/
-│   └── index.ts                    # Core parser: parse() & auth()
+│   ├── index.ts                    # Core parser: parse() & auth()
+│   └── base64.ts                   # Base64 encode/decode utilities
 ├── expressBasicAuth/
 │   └── index.ts                    # Express middleware builder
-├── interfaces/
-│   ├── basicAuth.interface.ts      # IAuthObject, IRequestHeaderAuthorization
-│   └── expressBasicAuth.interface.ts # IBasicAuthedRequest, IbuildMiddleware
-└── utils/
-    └── constant.util.ts             # Project constants
+└── interfaces/
+    ├── basicAuth.interface.ts      # Credentials, IRequestHeaderAuthorization
+    └── expressBasicAuth.interface.ts # IBasicAuthedRequest, IbuildMiddleware
 
 tests/
 ├── unit/
 │   ├── basicAuth.test.ts           # Unit tests for parse() & auth()
 │   ├── base64.spec.ts              # Unit tests for base64 encode/decode
 │   ├── format.spec.ts              # Unit tests for format() (header formatting)
-│   └── parse.spec.ts               # Unit tests for parse() (credential parsing)
+│   └── safeCompare.spec.ts         # Unit tests for safeCompare()
 ├── integration/
 │   └── expressBasicAuth.test.ts    # Integration tests for middleware
 └── benchmarks/

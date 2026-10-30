@@ -21,8 +21,9 @@
       "stripInternal": true,
       "importHelpers": false,
       "target": "ES2016",
-      "types": ["node", "jest"],
-      "skipLibCheck": true
+      "types": ["node", "jest", "express"],
+      "skipLibCheck": true,
+      "lib": ["ES2016"]
    },
    "include": ["src/**/*.ts", "tests/**/*.ts", "tests/**/**/*.ts"],
    "exclude": ["node_modules", "**/*.spec.ts", "dist"]

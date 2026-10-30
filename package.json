@@ -11,10 +11,10 @@
     "basicauth",
     "authentication"
   ],
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=24"
+    "node": ">=18"
   },
   "repository": {
     "type": "git",
@@ -25,11 +25,7 @@
     "url": "https://github.com/TriBuiQuang/auth-basic-improve/issues"
   },
   "files": [
-    "index.js",
-    "app.js",
-    "env.js",
-    "interfaces/*",
-    "utils/*"
+    "dist/"
   ],
   "scripts": {
     "build": "rm -rf ./dist && tsc --project tsconfig.prod.json",
@@ -68,9 +64,7 @@
     {
       "name": "auth-basic-improve",
       "path": "dist/index.js",
-      "ignore": [
-        "express"
-      ]
+      "ignore": ["express"]
     }
   ]
 }

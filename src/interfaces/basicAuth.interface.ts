@@ -1,7 +1,7 @@
 import { Request } from "express";
 
 /**
- * Object to represent user credentials.
+ * Object to represent user credentials extracted from a Basic Auth header.
  */
 export interface Credentials {
    name: string;
@@ -9,15 +9,8 @@ export interface Credentials {
 }
 
 /**
- * @deprecated Use Credentials instead. Kept for backward compatibility.
+ * Request type with an optional `authorization` header.
  */
-export interface IAuthObject {
-   name?: string;
-   pass?: string;
-}
-
-export type TAuth = IAuthObject | string;
-
 export interface IRequestHeaderAuthorization extends Request {
    headers: { authorization?: string };
 }

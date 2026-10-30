@@ -24,9 +24,8 @@ auth-basic-improve/
 │   ├── unit/
 │   │   ├── basicAuth.test.ts             # Unit tests for parse() & auth()
 │   │   ├── base64.spec.ts                # Unit tests for base64 encode/decode
-│   │   ├── format.spec.ts                # Unit tests for format() (header formatting)
-│   │   └── parse.spec.ts                 # Unit tests for parse() (credential parsing)
-│   ├── integration/
+│   └── safeCompare.spec.ts           # Unit tests for safeCompare()│   │   ├── format.spec.ts                # Unit tests for format() (header formatting)
+│   │   ├── integration/
 │   │   └── expressBasicAuth.test.ts      # Integration tests for middleware
 │   └── benchmarks/
 │       ├── base64.bench.ts               # Benchmarks for base64 decoding strategies
@@ -73,8 +72,8 @@ auth-basic-improve/
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
-| `parse(str?: string)` | `string \| IAuthObject` | Parses a base64-encoded Basic Auth string directly. Returns `{ name, pass }` or `""` on failure. |
-| `auth(req?: Request)` | `IAuthObject \| string` | Extracts the `Authorization` header from an Express `Request` and passes it to `parse()`. |
+| `parse(str: string)` | `Credentials | undefined` | Parses a base64-encoded Basic Auth string directly. Returns `{ name, pass }` or `""` on failure. |
+| `auth(req: Request)` | `Credentials | undefined` | Extracts the `Authorization` header from an Express `Request` and passes it to `parse()`. |
 | `getAuthorization(req)` | `string` | Internal helper: reads `req.headers.authorization`. |
 | `decodeBase64(str)` | `string` | Internal helper: decodes base64 to UTF-8 string. |
 
@@ -86,7 +85,7 @@ auth-basic-improve/
 | `USER_PASS_REGEXP` | Splits the decoded string into `userid:password`. |
 
 **Interfaces Used**:
-- `IAuthObject` — `{ name?: string; pass?: string }`
+- `Credentials` — `{ name: string; pass: string }`
 - `IRequestHeaderAuthorization` — `Request` with `headers: { authorization: string }`
 
 **Throws**:
@@ -350,11 +349,7 @@ Measures `parse()` performance across header formats:
 **Published Files** (from `package.json`):
 ```json
 "files": [
-  "index.js",       // compiled src/index.ts
-  "app.js",         // compiled src/app.ts
-  "env.js",         // (not found in src — may be legacy)
-  "interfaces/*",   // all interface files
-  "utils/*"         // all utility files
+  "dist/"
 ]
 ```
 
@@ -369,4 +364,4 @@ yarn build
 npm publish
 ```
 
-The package publishes compiled JS + `.d.ts` files. Node.js `>= 24` is required.
+The package publishes compiled JS + `.d.ts` files. Node.js `>= 18` is required.
