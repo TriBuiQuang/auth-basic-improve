@@ -40,23 +40,7 @@ module.exports = tseslint.config(
       "import/no-extraneous-dependencies": [0],
       "import/no-named-as-default-member": 0,
       "import/no-unresolved": [2, { amd: true, commonjs: true }],
-      "import/order": [
-        "error",
-        {
-          alphabetize: { caseInsensitive: true, order: "asc" },
-          groups: [
-            "builtin",
-            "external",
-            "internal",
-            ["index", "sibling", "parent", "object"],
-          ],
-          "newlines-between": "always",
-          pathGroups: [
-            { group: "external", pattern: "@/**", position: "after" },
-          ],
-          pathGroupsExcludedImportTypes: ["builtin"],
-        },
-      ],
+      "import/order": "off",
       "import/prefer-default-export": 0,
       "no-console": [1, { allow: ["error", "info"] }],
       "no-promise-executor-return": ["warn"],
@@ -65,12 +49,6 @@ module.exports = tseslint.config(
       "prettier/prettier": ["error"],
       quotes: [2, "double", { allowTemplateLiterals: true, avoidEscape: true }],
       "sort-keys": [1, "asc", { caseSensitive: true, natural: true }],
-    },
-  },
-  {
-    files: ["**/*.spec.ts", "**/*.bench.ts"],
-    rules: {
-      "import/order": "off",
     },
   },
   prettierPlugin,

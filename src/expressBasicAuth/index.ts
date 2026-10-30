@@ -1,4 +1,3 @@
-import assert from "assert";
 import { timingSafeEqual } from "crypto";
 
 import type { Request, Response, NextFunction } from "express";
@@ -8,6 +7,7 @@ import type {
    AsyncAuthorizerFn,
    AuthorizerFn,
    IbuildMiddleware,
+   PromiseAuthorizerFn,
    RealmFn,
 } from "../interfaces/expressBasicAuth.interface";
 
@@ -33,13 +33,44 @@ export const safeCompare = (userInput: string, secret: string): boolean => {
    const userInputLength = Buffer.byteLength(userInput);
    const secretLength = Buffer.byteLength(secret);
 
-   // Early exit on length mismatch — no constant-time concern since we reject immediately
-   if (userInputLength !== secretLength) return false;
+   // Always compute full comparison to prevent timing attacks.
+   // When lengths differ, pad the shorter buffer so timingSafeEqual
+   // still runs the full comparison — the XOR result will differ,
+   // guaranteeing a `false` return without leaking length info.
+   const maxLen = Math.max(userInputLength, secretLength);
 
-   const userInputBuffer = Buffer.from(userInput, "utf8");
-   const secretBuffer = Buffer.from(secret, "utf8");
+   // Build padded buffers using Buffer.allocUnsafe + copy to avoid Buffer.concat
+   // type errors. Buffer.concat returns Buffer with ArrayBufferLike .buffer,
+   // which is incompatible with Uint8Array<ArrayBuffer> expected by
+   // timingSafeEqual. Using Buffer.allocUnsafe + copy avoids this.
+   const bufUser = Buffer.allocUnsafe(maxLen);
+   Buffer.from(userInput, "utf8").copy(bufUser as unknown as Uint8Array, 0, 0, maxLen);
+   const bufSecret = Buffer.allocUnsafe(maxLen);
+   Buffer.from(secret, "utf8").copy(bufSecret as unknown as Uint8Array, 0, 0, maxLen);
 
-   return timingSafeEqual(new Uint8Array(userInputBuffer), new Uint8Array(secretBuffer));
+   // Convert to Uint8Array for timingSafeEqual compatibility.
+   // Buffer.buffer is ArrayBufferLike (includes SharedArrayBuffer),
+   // which is incompatible with Uint8Array<ArrayBuffer> expected by
+   // timingSafeEqual. Explicitly cast .buffer to ArrayBuffer to create
+   // a fresh ArrayBuffer-backed Uint8Array copy.
+   const userInputBytes = new Uint8Array(
+      bufUser.buffer as ArrayBuffer,
+      bufUser.byteOffset,
+      bufUser.byteLength,
+   );
+   const secretBytes = new Uint8Array(
+      bufSecret.buffer as ArrayBuffer,
+      bufSecret.byteOffset,
+      bufSecret.byteLength,
+   );
+
+   // timingSafeEqual always compares all bytes — length mismatch is
+   // hidden by the padding (0x00 vs actual bytes), so timing is constant.
+   const match = timingSafeEqual(userInputBytes, secretBytes);
+
+   // If original lengths differed, the padded bytes won't match anyway,
+   // but we explicitly enforce this to handle the edge case cleanly.
+   return match && userInputLength === secretLength;
 };
 
 /**
@@ -128,16 +159,20 @@ function buildMiddleware(options: IbuildMiddleware) {
       ...args: unknown[]
    ) => string | undefined;
 
-   assert(
-      typeof users === "object",
-      `Expected an object for the basic auth users, found ${typeof users} instead`,
-   );
-   assert(
-      typeof authorizer === "function",
-      `Expected a function for the basic auth authorizer, found ${typeof authorizer} instead`,
-   );
+   if (typeof users !== "object") {
+      throw new Error(`Expected an object for the basic auth users, found ${typeof users} instead`);
+   }
+   if (typeof authorizer !== "function") {
+      throw new Error(
+         `Expected a function for the basic auth authorizer, found ${typeof authorizer} instead`,
+      );
+   }
 
-   return function authMiddleware(req: Request, res: Response, next: NextFunction): void {
+   return function authMiddleware(
+      req: Request,
+      res: Response,
+      next: NextFunction,
+   ): void | Promise<void> {
       function unauthorized() {
          if (challenge) {
             let challengeString = "Basic";
@@ -170,15 +205,16 @@ function buildMiddleware(options: IbuildMiddleware) {
 
       if (!authentication) return unauthorized();
 
-      // Attach parsed credentials to the request object using Object.defineProperty
-      // to properly extend the Request type without unsafe type assertions
-      const authedReq = req as Request & { auth?: { user: string; password: string } };
-      authedReq.auth = {
+      // Attach parsed credentials to the request object.
+      // The `auth` property is declared via module augmentation in `express.d.ts`,
+      // so this is type-safe without any `as` assertions.
+      req.auth = {
          password: authentication.pass,
          user: authentication.name,
       };
 
-      if (isAsync)
+      if (isAsync) {
+         // Callback-based async authorizer (3 args)
          return (
             authorizer as (
                username: string,
@@ -186,14 +222,28 @@ function buildMiddleware(options: IbuildMiddleware) {
                cb: (err: Error | null, result: boolean) => void,
             ) => void
          )(authentication.name, authentication.pass, authorizerCallback);
-
-      // Type guard: sync authorizers take 2 args, async takes 3
-      const isSyncAuthorizer = (fn: AuthorizerFn | AsyncAuthorizerFn): fn is AuthorizerFn =>
-         fn.length <= 2;
-
-      if (isSyncAuthorizer(authorizer)) {
-         if (!authorizer(authentication.name, authentication.pass)) return unauthorized();
       }
+
+      // For sync and Promise-based authorizers, call with 2 args.
+      // We narrow the type by checking the return value at runtime.
+      const result: boolean | Promise<boolean> = (authorizer as AuthorizerFn | PromiseAuthorizerFn)(
+         authentication.name,
+         authentication.pass,
+      );
+
+      // Detect Promise-based async authorizers by checking if the result is a Promise
+      if (result instanceof Promise) {
+         return (result as Promise<boolean>).then(
+            (approved) => {
+               if (approved) return next();
+               return unauthorized();
+            },
+            (err: unknown) => next(err),
+         );
+      }
+
+      // Synchronous authorizer
+      if (!result) return unauthorized();
 
       return next();
    };

@@ -47,6 +47,16 @@ const customCompareAuth = basicAuth({
    authorizer: myComparingAuthorizer,
 });
 
+// Promise-based async authorizer
+const myPromiseAuthorizer = async (username: string, password: string): Promise<boolean> => {
+   if (username.startsWith("P") && password.startsWith("secret")) return true;
+   return false;
+};
+
+const promiseAuthorizerAuth = basicAuth({
+   authorizer: myPromiseAuthorizer,
+});
+
 // Same, but sends a basic auth challenge header when authorization fails
 const challengeAuth = basicAuth({
    authorizer: myAuthorizer,
@@ -98,6 +108,10 @@ app.get("/custom", customAuthorizerAuth, (req: Request, res: Response) => {
 });
 
 app.get("/custom-compare", customCompareAuth, (req: Request, res: Response) => {
+   res.status(200).send("You passed");
+});
+
+app.get("/promise", promiseAuthorizerAuth, (req: Request, res: Response) => {
    res.status(200).send("You passed");
 });
 
@@ -215,6 +229,25 @@ describe("express-basic-auth", () => {
       });
    });
 
+   describe("with Promise-based async authorizer", () => {
+      const endpoint = "/promise";
+
+      it("should reject on missing header", (done) => {
+         supertest(app).get(endpoint).expect(401, done);
+      });
+
+      it("should reject on wrong credentials", (done) => {
+         supertest(app).get(endpoint).auth("dude", "stuff").expect(401, done);
+      });
+
+      it("should accept fitting credentials", (done) => {
+         supertest(app).get(endpoint).auth("Peter", "secretkey").expect(200, "You passed", done);
+      });
+
+      it("should reject credentials not matching the pattern", (done) => {
+         supertest(app).get(endpoint).auth("Alice", "secret123").expect(401, done);
+      });
+   });
    describe("async authorizer", () => {
       const endpoint = "/async";
 

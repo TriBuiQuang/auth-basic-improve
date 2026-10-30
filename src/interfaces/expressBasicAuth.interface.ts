@@ -19,6 +19,12 @@ export type AsyncAuthorizerFn = (
 ) => void;
 
 /**
+ * Function type for Promise-based async authorizer.
+ * Returns a Promise<boolean> — `true` if credentials are valid, `false` otherwise.
+ */
+export type PromiseAuthorizerFn = (username: string, password: string) => Promise<boolean>;
+
+/**
  * Function type for generating a custom unauthorized response body.
  */
 export type UnauthorizedResponseFn = (req: IBasicAuthedRequest) => string | Record<string, unknown>;
@@ -33,6 +39,6 @@ export interface IbuildMiddleware {
    users?: Record<string, string>;
    authorizeAsync?: boolean;
    unauthorizedResponse?: string | Record<string, unknown> | UnauthorizedResponseFn;
-   authorizer?: AuthorizerFn | AsyncAuthorizerFn;
+   authorizer?: AuthorizerFn | AsyncAuthorizerFn | PromiseAuthorizerFn;
    realm?: string | RealmFn;
 }

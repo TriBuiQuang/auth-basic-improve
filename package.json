@@ -65,7 +65,8 @@
       "name": "auth-basic-improve",
       "path": "dist/index.js",
       "ignore": [
-        "express"
+        "express",
+        "crypto"
       ]
     }
   ]
