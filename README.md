@@ -1,7 +1,7 @@
 # auth-basic-improve
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js >= 22](https://img.shields.io/badge/Node.js-%3E=22-brightgreen)](https://nodejs.org/)
+[![Node.js >= 24](https://img.shields.io/badge/Node.js-%3E=24-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4%2B-blue)](https://www.typescriptlang.org/)
 
 A lightweight, TypeScript-native **Basic Authentication parser** for Node.js & Express.js.
@@ -53,7 +53,7 @@ yarn add auth-basic-improve
 npm install auth-basic-improve
 ```
 
-**Requirements**: Node.js `>= 22`
+**Requirements**: Node.js `>= 24`
 
 ---
 
