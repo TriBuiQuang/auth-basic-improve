@@ -68,7 +68,8 @@ import { parse } from "auth-basic-improve";
 
 const result = parse("Basic Zm9vOmJhcg==");
 // Returns: { name: "foo", pass: "bar" }
-// Returns undefined for invalid/malformed strings
+// Returns undefined for invalid/malformed header strings
+// Throws TypeError if the input is not a string
 ```
 
 ### 2. Extract Auth from Express Request
@@ -225,7 +226,9 @@ Parses a base64-encoded Basic Authentication string into `{ name, pass }`.
 | --------- | -------- | -------- | --------------------- |
 | `str`     | `string` | Yes      | Base64-encoded auth string |
 
-**Returns**: `{ name: string, pass: string }` on success, `undefined` on failure.
+**Returns**: `{ name: string, pass: string }` on success, `undefined` for malformed or non-Basic header strings.
+
+**Throws**: `TypeError` if `str` is not a string.
 
 ---
 

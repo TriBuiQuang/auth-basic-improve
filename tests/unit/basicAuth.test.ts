@@ -104,20 +104,22 @@ describe("auth(req as Request)", () => {
 
 describe("parse(string)", () => {
    describe("with non-string input", () => {
-      it("should return undefined for null", () => {
-         expect(parse(null as unknown as string)).toStrictEqual(undefined);
+      it("should throw a TypeError for null", () => {
+         expect(() => parse(null as unknown as string)).toThrow(new TypeError("Expected a string"));
       });
 
-      it("should return undefined for undefined", () => {
-         expect(parse(undefined as unknown as string)).toStrictEqual(undefined);
+      it("should throw a TypeError for undefined", () => {
+         expect(() => parse(undefined as unknown as string)).toThrow(
+            new TypeError("Expected a string"),
+         );
       });
 
-      it("should return undefined for a number", () => {
-         expect(parse(42 as unknown as string)).toStrictEqual(undefined);
+      it("should throw a TypeError for a number", () => {
+         expect(() => parse(42 as unknown as string)).toThrow(new TypeError("Expected a string"));
       });
 
-      it("should return undefined for an object", () => {
-         expect(parse({} as unknown as string)).toStrictEqual(undefined);
+      it("should throw a TypeError for an object", () => {
+         expect(() => parse({} as unknown as string)).toThrow(new TypeError("Expected a string"));
       });
    });
 

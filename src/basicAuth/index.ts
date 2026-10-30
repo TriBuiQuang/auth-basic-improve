@@ -52,8 +52,8 @@ const getAuthorization = (req: IRequestHeaderAuthorization): string | undefined 
  *
  * @param string - The raw Authorization header value (e.g., `"Basic Zm9vOmJhcg=="`).
  * @returns An object with `name` and `pass` properties, or `undefined` if the
- *          string is malformed, lacks a colon separator, has an invalid scheme,
- *          or is not a string.
+ *          string is malformed, lacks a colon separator, or has an invalid scheme.
+ * @throws {TypeError} If the input is not a string.
  *
  * @example
  * ```typescript
@@ -63,7 +63,7 @@ const getAuthorization = (req: IRequestHeaderAuthorization): string | undefined 
  */
 export const parse = (string: string): Credentials | undefined => {
    if (typeof string !== "string") {
-      return undefined;
+      throw new TypeError("Expected a string");
    }
 
    // parse header
