@@ -1,76 +1,76 @@
 {
-   "name": "auth-basic-improve",
-   "version": "0.0.2",
-   "description": "node.js basic auth parser",
-   "author": "Tri Bui Quang",
-   "license": "MIT",
-   "keywords": [
-      "basic",
-      "auth",
-      "authorization",
-      "basicauth",
-      "authentication"
-   ],
-   "main": "index.js",
-   "types": "index.d.ts",
-   "engines": {
-      "node": ">=24"
-   },
-   "repository": {
-      "type": "git",
-      "url": "git+https://github.com/TriBuiQuang/auth-basic-improve.git"
-   },
-   "homepage": "https://github.com/TriBuiQuang/auth-basic-improve/blob/main/README.md",
-   "bugs": {
-      "url": "https://github.com/TriBuiQuang/auth-basic-improve/issues"
-   },
-   "files": [
-      "index.js",
-      "app.js",
-      "env.js",
-      "interfaces/*",
-      "utils/*"
-   ],
-   "scripts": {
-      "build": "rm -rf ./dist && tsc --project tsconfig.prod.json",
-      "test": "jest --testPathPatterns=./tests",
-      "test:coverage": "jest --coverage",
-      "test:unit": "jest --testPathPatterns=./tests/unit",
-      "lint": "eslint . --ext .ts,.tsx --fix",
-      "size": "size-limit"
-   },
-   "devDependencies": {
-      "@eslint/js": "^10.0.1",
-      "@size-limit/preset-small-lib": "^14.3.0",
-      "@types/express": "^5.0.6",
-      "@types/jest": "^30.0.0",
-      "@types/supertest": "^7.2.1",
-      "@typescript-eslint/eslint-plugin": "^8.72.1",
-      "@typescript-eslint/parser": "^8.72.1",
-      "eslint": "^10.13.0",
-      "eslint-config-airbnb-base": "^15.0.0",
-      "eslint-config-prettier": "^10.1.8",
-      "eslint-import-resolver-typescript": "^4.4.5",
-      "eslint-plugin-import": "^2.32.0",
-      "eslint-plugin-prettier": "^5.5.7",
-      "express": "^5.3.0",
-      "jest": "^30.5.2",
-      "prettier": "^3.9.10",
-      "size-limit": "^14.3.0",
-      "supertest": "^7.3.1",
-      "ts-jest": "^29.4.15",
-      "tsconfig-paths-jest": "^0.0.1",
-      "typescript": "^5.4.0",
-      "typescript-eslint": "^8.72.1"
-   },
-   "packageManager": "yarn@4.5.0",
-   "size-limit": [
-      {
-         "name": "auth-basic-improve",
-         "path": "dist/index.js",
-         "ignore": [
-            "express"
-         ]
-      }
-   ]
+  "name": "auth-basic-improve",
+  "version": "1.0.0",
+  "description": "node.js basic auth parser",
+  "author": "Tri Bui Quang",
+  "license": "MIT",
+  "keywords": [
+    "basic",
+    "auth",
+    "authorization",
+    "basicauth",
+    "authentication"
+  ],
+  "main": "index.js",
+  "types": "index.d.ts",
+  "engines": {
+    "node": ">=24"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TriBuiQuang/auth-basic-improve.git"
+  },
+  "homepage": "https://github.com/TriBuiQuang/auth-basic-improve/blob/main/README.md",
+  "bugs": {
+    "url": "https://github.com/TriBuiQuang/auth-basic-improve/issues"
+  },
+  "files": [
+    "index.js",
+    "app.js",
+    "env.js",
+    "interfaces/*",
+    "utils/*"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc --project tsconfig.prod.json",
+    "test": "jest --testPathPatterns=./tests",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest --testPathPatterns=./tests/unit",
+    "lint": "eslint . --ext .ts,.tsx --fix",
+    "size": "size-limit"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@size-limit/preset-small-lib": "^14.3.0",
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/supertest": "^7.2.1",
+    "@typescript-eslint/eslint-plugin": "^8.72.1",
+    "@typescript-eslint/parser": "^8.72.1",
+    "eslint": "^10.13.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.7",
+    "express": "^5.3.0",
+    "jest": "^30.5.2",
+    "prettier": "^3.9.10",
+    "size-limit": "^14.3.0",
+    "supertest": "^7.3.1",
+    "ts-jest": "^29.4.15",
+    "tsconfig-paths-jest": "^0.0.1",
+    "typescript": "^5.4.0",
+    "typescript-eslint": "^8.72.1"
+  },
+  "packageManager": "yarn@4.5.0",
+  "size-limit": [
+    {
+      "name": "auth-basic-improve",
+      "path": "dist/index.js",
+      "ignore": [
+        "express"
+      ]
+    }
+  ]
 }

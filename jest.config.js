@@ -3,7 +3,7 @@ module.exports = {
    modulePaths: ["<rootDir>"],
    roots: ["<rootDir>"],
    testEnvironment: "node",
-   testMatch: ["**/*.(steps|test).(ts|js)"],
+   testMatch: ["**/*.(steps|test|spec|bench).(ts|js)"],
    transform: {
       "\\.ts$": ["ts-jest"],
    },

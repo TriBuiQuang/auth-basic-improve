@@ -67,5 +67,11 @@ module.exports = tseslint.config(
       "sort-keys": [1, "asc", { caseSensitive: true, natural: true }],
     },
   },
+  {
+    files: ["**/*.spec.ts", "**/*.bench.ts"],
+    rules: {
+      "import/order": "off",
+    },
+  },
   prettierPlugin,
 );

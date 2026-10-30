@@ -1,13 +1,13 @@
 import { Request } from "express";
 
-import { IAuthObject, auth, parse } from "../../src/basicAuth";
+import { auth, parse, Credentials } from "../../src/basicAuth";
 
 const request = (authorization?: string) => {
    return { headers: { authorization } };
 };
 
-const assertCreds = (creds: ReturnType<typeof auth>): IAuthObject => {
-   if (typeof creds === "string") throw new Error("Expected IAuthObject, got string");
+const assertCreds = (creds: Credentials | undefined): Credentials => {
+   if (creds === undefined) throw new Error("Expected Credentials, got undefined");
    return creds;
 };
 
@@ -28,30 +28,30 @@ describe("auth(req as Request)", () => {
    });
 
    describe("with no Authorization field", () => {
-      it("should return empty", () => {
+      it("should return undefined", () => {
          const req = request();
-         expect(auth(req as Request)).toStrictEqual("");
+         expect(auth(req as Request)).toStrictEqual(undefined);
       });
    });
 
    describe("with malformed Authorization field", () => {
-      it("should return empty", () => {
+      it("should return undefined", () => {
          const req = request("Something");
-         expect(auth(req as Request)).toStrictEqual("");
+         expect(auth(req as Request)).toStrictEqual(undefined);
       });
    });
 
    describe("with malformed Authorization scheme", () => {
-      it("should return empty", () => {
+      it("should return undefined", () => {
          const req = request("basic_Zm9vOmJhcg==");
-         expect(auth(req as Request)).toStrictEqual("");
+         expect(auth(req as Request)).toStrictEqual(undefined);
       });
    });
 
    describe("with malformed credentials", () => {
-      it("should return empty", () => {
+      it("should return undefined", () => {
          const req = request("basic Zm9vcgo=");
-         expect(auth(req as Request)).toStrictEqual("");
+         expect(auth(req as Request)).toStrictEqual(undefined);
       });
    });
 
@@ -104,26 +104,26 @@ describe("auth(req as Request)", () => {
 
 describe("parse(string)", () => {
    describe("with undefined string", () => {
-      it("should return empty", () => {
-         expect(parse()).toStrictEqual("");
+      it("should throw TypeError", () => {
+         expect(() => (parse as unknown as () => void)()).toThrow(/Expected a string/);
       });
    });
 
    describe("with malformed string", () => {
-      it("should return empty", () => {
-         expect(parse("something")).toStrictEqual("");
+      it("should return undefined", () => {
+         expect(parse("something")).toStrictEqual(undefined);
       });
    });
 
    describe("with malformed scheme", () => {
-      it("should return empty", () => {
-         expect(parse("basic_Zm9vOmJhcg==")).toStrictEqual("");
+      it("should return undefined", () => {
+         expect(parse("basic_Zm9vOmJhcg==")).toStrictEqual(undefined);
       });
    });
 
    describe("with malformed credentials", () => {
-      it("should return empty", () => {
-         expect(parse("basic Zm9vcgo=")).toStrictEqual("");
+      it("should return undefined", () => {
+         expect(parse("basic Zm9vcgo=")).toStrictEqual(undefined);
       });
    });
 

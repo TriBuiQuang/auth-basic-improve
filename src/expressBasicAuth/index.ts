@@ -3,8 +3,9 @@ import { timingSafeEqual } from "crypto";
 
 import { Request, Response, NextFunction } from "express";
 
-import { auth } from "../basicAuth";
+import { auth, Credentials } from "../basicAuth";
 import { IBasicAuthedRequest, IbuildMiddleware } from "../interfaces/expressBasicAuth.interface";
+
 /**
  *
  */
@@ -89,13 +90,13 @@ function buildMiddleware(options: IbuildMiddleware) {
 
          return unauthorized();
       }
-      const authentication = auth(req);
+      const authentication: Credentials | undefined = auth(req);
 
-      if (!authentication || typeof authentication === "string") return unauthorized();
+      if (!authentication) return unauthorized();
       const request = req as IBasicAuthedRequest;
       request.auth = {
-         password: authentication.pass || "",
-         user: authentication.name || "",
+         password: authentication.pass,
+         user: authentication.name,
       };
 
       if (isAsync) return authorizer(authentication.name, authentication.pass, authorizerCallback);

@@ -280,9 +280,16 @@ src/
 
 tests/
 ├── unit/
-│   └── basicAuth.test.ts           # Unit tests for parse() & auth()
-└── integration/
-    └── expressBasicAuth.test.ts    # Integration tests for middleware
+│   ├── basicAuth.test.ts           # Unit tests for parse() & auth()
+│   ├── base64.spec.ts              # Unit tests for base64 encode/decode
+│   ├── format.spec.ts              # Unit tests for format() (header formatting)
+│   └── parse.spec.ts               # Unit tests for parse() (credential parsing)
+├── integration/
+│   └── expressBasicAuth.test.ts    # Integration tests for middleware
+└── benchmarks/
+    ├── base64.bench.ts             # Benchmarks for base64 decoding strategies
+    ├── format.bench.ts             # Benchmarks for format() performance
+    └── parse.bench.ts              # Benchmarks for parse() performance
 ```
 
 See [README_STRUCTURE.md](./README_STRUCTURE.md) for a detailed file-by-file breakdown.
