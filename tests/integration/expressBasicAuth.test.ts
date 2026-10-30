@@ -1,8 +1,8 @@
 import express, { Request, Response } from "express";
 import supertest from "supertest";
 
-import basicAuth from "@/expressBasicAuth";
-import { IBasicAuthedRequest } from "@/interfaces/expressBasicAuth.interface";
+import basicAuth from "../../src/expressBasicAuth";
+import { IBasicAuthedRequest } from "../../src/interfaces/expressBasicAuth.interface";
 
 const app = express();
 
@@ -21,7 +21,11 @@ const staticUserAuth = basicAuth({
 const customAuthorizerAuth = basicAuth({ authorizer: myAuthorizer });
 
 // Same but asynchronous
-const myAsyncAuthorizer = (username: string, password: string, cb: any) => {
+const myAsyncAuthorizer = (
+   username: string,
+   password: string,
+   cb: (err: Error | null, result: boolean) => void,
+) => {
    if (username.startsWith("A") && password.startsWith("secret")) return cb(null, true);
    return cb(null, false);
 };
@@ -161,7 +165,7 @@ describe("express-basic-auth", () => {
          supertest(app)
             .get(endpoint)
             .auth("dude", "stuff")
-            .expect((res: any) => {
+            .expect((res: { headers: Record<string, string> }) => {
                if (res.headers["WWW-Authenticate"])
                   throw new Error("Response should not have a challenge");
             })

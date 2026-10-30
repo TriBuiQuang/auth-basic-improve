@@ -3,8 +3,8 @@ import { timingSafeEqual } from "crypto";
 
 import { Request, Response, NextFunction } from "express";
 
-import { auth } from "@/basicAuth";
-import { IBasicAuthedRequest, IbuildMiddleware } from "@/interfaces/expressBasicAuth.interface";
+import { auth } from "../basicAuth";
+import { IBasicAuthedRequest, IbuildMiddleware } from "../interfaces/expressBasicAuth.interface";
 /**
  *
  */
@@ -17,7 +17,12 @@ export const safeCompare = (userInput: string, secret: string) => {
    const secretBuffer = Buffer.alloc(userInputLength, 0, "utf8");
    secretBuffer.write(secret);
 
-   return !!(timingSafeEqual(userInputBuffer, secretBuffer) && userInputLength === secretLength);
+   return !!(
+      timingSafeEqual(
+         userInputBuffer as unknown as Uint8Array,
+         secretBuffer as unknown as Uint8Array,
+      ) && userInputLength === secretLength
+   );
 };
 
 /**
@@ -52,11 +57,11 @@ function buildMiddleware(options: IbuildMiddleware) {
 
    assert(
       typeof users === "object",
-      `Expected an object for the basic auth users, found ${typeof users} instead`
+      `Expected an object for the basic auth users, found ${typeof users} instead`,
    );
    assert(
       typeof authorizer === "function",
-      `Expected a function for the basic auth authorizer, found ${typeof authorizer} instead`
+      `Expected a function for the basic auth authorizer, found ${typeof authorizer} instead`,
    );
 
    return function authMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -86,11 +91,11 @@ function buildMiddleware(options: IbuildMiddleware) {
       }
       const authentication = auth(req);
 
-      if (!authentication) return unauthorized();
+      if (!authentication || typeof authentication === "string") return unauthorized();
       const request = req as IBasicAuthedRequest;
       request.auth = {
-         password: authentication.pass,
-         user: authentication.name,
+         password: authentication.pass || "",
+         user: authentication.name || "",
       };
 
       if (isAsync) return authorizer(authentication.name, authentication.pass, authorizerCallback);

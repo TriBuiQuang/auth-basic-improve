@@ -1,7 +1,8 @@
 import { Request } from "express";
 
-import { IRequestHeaderAuthorization, TAuth } from "@/interfaces/basicAuth.interface";
-import { IBasicAuthedRequest } from "@/interfaces/expressBasicAuth.interface";
+import { IAuthObject, IRequestHeaderAuthorization } from "../interfaces/basicAuth.interface";
+
+export type { IAuthObject };
 /*!
  * basic-auth
  * MIT Licensed
@@ -44,7 +45,7 @@ const getAuthorization = (req: IRequestHeaderAuthorization): string => {
 /**
  * Parse basic auth to object.
  */
-export const parse = (str?: string): any => {
+export const parse = (str?: string): IAuthObject | string => {
    if (typeof str !== "string") return "";
 
    // parse header
@@ -67,7 +68,7 @@ export const parse = (str?: string): any => {
  * @param {object} req
  * @return {object} with .name and .pass
  */
-export const auth = (req?: Request): any => {
+export const auth = (req?: Request): IAuthObject | string => {
    if (!req) throw new TypeError("argument req is required");
 
    if (typeof req !== "object") throw new TypeError("argument req is required to be an object");

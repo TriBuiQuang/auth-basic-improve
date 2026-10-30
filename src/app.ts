@@ -1,4 +1,4 @@
-import * as auth from "@/basicAuth/index";
+import * as auth from "./basicAuth/index";
 
 /**
  *  @module basic-auth-improve

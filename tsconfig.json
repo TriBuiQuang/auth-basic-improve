@@ -2,24 +2,18 @@
    "compilerOptions": {
       "allowSyntheticDefaultImports": true,
       "alwaysStrict": true,
-      "baseUrl": "./",
       "declaration": true,
       "emitDecoratorMetadata": true,
       "emitDeclarationOnly": false,
       "esModuleInterop": true,
       "experimentalDecorators": true,
       "module": "CommonJS",
-      "moduleResolution": "node",
       "noEmit": false,
       "noImplicitAny": true,
       "noImplicitReturns": true,
       "noImplicitThis": true,
-      "noStrictGenericChecks": true,
       "outDir": "dist",
-      "paths": {
-         "@/*": ["src/*"],
-         "package.json": ["package.json"]
-      },
+
       "removeComments": false,
       "resolveJsonModule": true,
       "strict": true,
