@@ -201,7 +201,7 @@ const authMiddleware = buildMiddleware({
 
 #### Safe Compare
 
-Use timing-safe string comparison to prevent timing attacks:
+Use timing-safe byte comparison to reduce content-dependent timing differences:
 
 ```typescript
 import { safeCompare } from "auth-basic-improve";
@@ -261,7 +261,7 @@ Creates an Express authentication middleware.
 
 ### `safeCompare(userInput: string, secret: string) => boolean`
 
-Performs a timing-safe comparison of two strings using `crypto.timingSafeEqual`.
+Compares strings using `crypto.timingSafeEqual`, avoiding an early exit when bytes differ. Runtime still depends on the longer input's byte length, so it is not constant-time across different input lengths.
 
 ---
 

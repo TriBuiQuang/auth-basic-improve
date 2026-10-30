@@ -68,6 +68,10 @@ describe("safeCompare", () => {
       it("should return false for empty vs non-empty", () => {
          expect(safeCompare("", "not empty")).toBe(false);
       });
+
+      it("should return false when the longer string only adds null bytes", () => {
+         expect(safeCompare("a", "a\0")).toBe(false);
+      });
    });
 
    describe("edge cases", () => {

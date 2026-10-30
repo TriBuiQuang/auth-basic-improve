@@ -14,10 +14,8 @@ import type {
 /**
  * Performs a timing-safe comparison of two strings using `crypto.timingSafeEqual`.
  *
- * This function prevents timing attacks by ensuring comparison takes constant time
- * regardless of where strings differ. Both strings must have the same byte length;
- * if lengths differ, the function returns `false` immediately without leaking
- * information about which string is "longer".
+ * The byte comparison does not stop at the first differing byte. Its runtime still
+ * depends on the longer input's byte length, so this is not constant-time across lengths.
  *
  * @param userInput - The first string to compare (user input).
  * @param secret - The second string to compare (stored secret).
@@ -33,43 +31,16 @@ export const safeCompare = (userInput: string, secret: string): boolean => {
    const userInputLength = Buffer.byteLength(userInput);
    const secretLength = Buffer.byteLength(secret);
 
-   // Always compute full comparison to prevent timing attacks.
-   // When lengths differ, pad the shorter buffer so timingSafeEqual
-   // still runs the full comparison — the XOR result will differ,
-   // guaranteeing a `false` return without leaking length info.
+   // Compare the full length of the longer input even when the lengths differ.
    const maxLen = Math.max(userInputLength, secretLength);
+   const userInputBytes = new Uint8Array(maxLen);
+   const secretBytes = new Uint8Array(maxLen);
+   Buffer.from(userInput, "utf8").copy(userInputBytes);
+   Buffer.from(secret, "utf8").copy(secretBytes);
 
-   // Build padded buffers using Buffer.allocUnsafe + copy to avoid Buffer.concat
-   // type errors. Buffer.concat returns Buffer with ArrayBufferLike .buffer,
-   // which is incompatible with Uint8Array<ArrayBuffer> expected by
-   // timingSafeEqual. Using Buffer.allocUnsafe + copy avoids this.
-   const bufUser = Buffer.allocUnsafe(maxLen);
-   Buffer.from(userInput, "utf8").copy(bufUser as unknown as Uint8Array, 0, 0, maxLen);
-   const bufSecret = Buffer.allocUnsafe(maxLen);
-   Buffer.from(secret, "utf8").copy(bufSecret as unknown as Uint8Array, 0, 0, maxLen);
-
-   // Convert to Uint8Array for timingSafeEqual compatibility.
-   // Buffer.buffer is ArrayBufferLike (includes SharedArrayBuffer),
-   // which is incompatible with Uint8Array<ArrayBuffer> expected by
-   // timingSafeEqual. Explicitly cast .buffer to ArrayBuffer to create
-   // a fresh ArrayBuffer-backed Uint8Array copy.
-   const userInputBytes = new Uint8Array(
-      bufUser.buffer as ArrayBuffer,
-      bufUser.byteOffset,
-      bufUser.byteLength,
-   );
-   const secretBytes = new Uint8Array(
-      bufSecret.buffer as ArrayBuffer,
-      bufSecret.byteOffset,
-      bufSecret.byteLength,
-   );
-
-   // timingSafeEqual always compares all bytes — length mismatch is
-   // hidden by the padding (0x00 vs actual bytes), so timing is constant.
+   // Zero-filled padding can make unequal-length inputs compare equal, so check
+   // the original byte lengths after doing the timing-safe byte comparison.
    const match = timingSafeEqual(userInputBytes, secretBytes);
-
-   // If original lengths differed, the padded bytes won't match anyway,
-   // but we explicitly enforce this to handle the edge case cleanly.
    return match && userInputLength === secretLength;
 };
 
