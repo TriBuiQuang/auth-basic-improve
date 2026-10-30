@@ -21,7 +21,7 @@ export type { Credentials, IRequestHeaderAuthorization };
  * token68     = 1*( ALPHA / DIGIT / "-" / "." / "_" / "~" / "+" / "/" ) *"="
  * @private
  */
-const CREDENTIALS_REGEXP = /^ *(?:[Bb][Aa][Ss][Ii][Cc]) +([A-Za-z0-9._~+/-]+=*) *$/;
+const CREDENTIALS_REGEXP = /^ *(?:Basic) +([A-Za-z0-9._~+/-]+=*) *$/i;
 
 /**
  * RegExp for RFC 5234 CTL characters (US-ASCII 0-31 and 127).
@@ -52,7 +52,8 @@ const getAuthorization = (req: IRequestHeaderAuthorization): string | undefined 
  *
  * @param string - The raw Authorization header value (e.g., `"Basic Zm9vOmJhcg=="`).
  * @returns An object with `name` and `pass` properties, or `undefined` if the
- *          string is malformed, lacks a colon separator, or has an invalid scheme.
+ *          string is malformed, lacks a colon separator, has an invalid scheme,
+ *          or is not a string.
  *
  * @example
  * ```typescript
@@ -62,7 +63,7 @@ const getAuthorization = (req: IRequestHeaderAuthorization): string | undefined 
  */
 export const parse = (string: string): Credentials | undefined => {
    if (typeof string !== "string") {
-      throw new TypeError("Expected a string");
+      return undefined;
    }
 
    // parse header

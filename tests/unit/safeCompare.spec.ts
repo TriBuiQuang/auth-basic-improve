@@ -92,5 +92,12 @@ describe("safeCompare", () => {
          expect(safeCompare(binary, binary)).toBe(true);
          expect(safeCompare(binary, binary.slice(0, -1))).toBe(false);
       });
+
+      it("should handle Unicode normalization differences (precomposed vs decomposed)", () => {
+         // "é" as precomposed U+00E9 vs. decomposed "e" + combining acute U+0301
+         const precomposed = "café"; // é = U+00E9
+         const decomposed = "cafe\u0301"; // e + combining acute accent
+         expect(safeCompare(precomposed, decomposed)).toBe(false);
+      });
    });
 });

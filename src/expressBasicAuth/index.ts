@@ -4,7 +4,12 @@ import { timingSafeEqual } from "crypto";
 import type { Request, Response, NextFunction } from "express";
 
 import { auth, Credentials } from "../basicAuth";
-import type { IbuildMiddleware } from "../interfaces/expressBasicAuth.interface";
+import type {
+   AsyncAuthorizerFn,
+   AuthorizerFn,
+   IbuildMiddleware,
+   RealmFn,
+} from "../interfaces/expressBasicAuth.interface";
 
 /**
  * Performs a timing-safe comparison of two strings using `crypto.timingSafeEqual`.
@@ -38,15 +43,6 @@ export const safeCompare = (userInput: string, secret: string): boolean => {
 };
 
 /**
- * Type guard to check if a value is a function.
- *
- * @param value - The value to check.
- * @returns `true` if the value is a function.
- */
-const isFunction = (value: unknown): value is (...args: unknown[]) => unknown =>
-   typeof value === "function";
-
-/**
  * Normalizes an option into a function that returns a value.
  *
  * - If `option` is `undefined`, returns a function that returns `defaultValue`.
@@ -76,7 +72,8 @@ const ensureFunction = (
    if (option === undefined)
       return (() => defaultValue) as (...args: unknown[]) => string | undefined;
 
-   if (!isFunction(option)) return (() => option as string) as (...args: unknown[]) => string;
+   if (typeof option !== "function")
+      return (() => option as string) as (...args: unknown[]) => string;
 
    return option as (...args: unknown[]) => string;
 };
@@ -104,7 +101,9 @@ const ensureFunction = (
  */
 function buildMiddleware(options: IbuildMiddleware) {
    const challenge = typeof options.challenge === "boolean" ? options.challenge : false;
-   const users = options.users || {};
+
+   // Clone users object to prevent mutation between requests (security hardening)
+   const users: Record<string, string> = { ...options.users };
 
    const staticUsersAuthorizer = (username: string, password: string): boolean => {
       const keys = Object.keys(users);
@@ -116,15 +115,18 @@ function buildMiddleware(options: IbuildMiddleware) {
       return false;
    };
 
-   const authorizer = options.authorizer
-      ? (options.authorizer as (username: string, password: string) => boolean)
+   const authorizer: AuthorizerFn | AsyncAuthorizerFn = options.authorizer
+      ? (options.authorizer as AuthorizerFn | AsyncAuthorizerFn)
       : staticUsersAuthorizer;
    const isAsync = typeof options.authorizeAsync === "boolean" ? options.authorizeAsync : false;
    const getResponseBody = ensureFunction(
       options.unauthorizedResponse as string | ((...args: unknown[]) => unknown),
       "",
-   );
-   const realm = ensureFunction(options.realm as string | ((...args: unknown[]) => unknown));
+   ) as
+      ((...args: unknown[]) => string | Record<string, unknown>) | ((...args: unknown[]) => string);
+   const realm = ensureFunction(options.realm as string | ((...args: unknown[]) => unknown)) as (
+      ...args: unknown[]
+   ) => string | undefined;
 
    assert(
       typeof users === "object",
@@ -139,7 +141,7 @@ function buildMiddleware(options: IbuildMiddleware) {
       function unauthorized() {
          if (challenge) {
             let challengeString = "Basic";
-            const realmName = (realm as (...args: unknown[]) => string | undefined)(req);
+            const realmName = (realm as RealmFn)(req);
 
             if (realmName) challengeString += ` realm="${realmName}"`;
 
@@ -155,11 +157,9 @@ function buildMiddleware(options: IbuildMiddleware) {
          }
       }
 
-      function authorizerCallback(
-         err: Error | null | Record<string, string>,
-         approved: boolean,
-      ): void {
-         assert.ifError(err);
+      function authorizerCallback(err: Error | null, approved: boolean): void {
+         // Properly propagate errors through Express error-handling middleware
+         if (err) return next(err);
 
          if (approved) return next();
 
@@ -187,7 +187,13 @@ function buildMiddleware(options: IbuildMiddleware) {
             ) => void
          )(authentication.name, authentication.pass, authorizerCallback);
 
-      if (!authorizer(authentication.name, authentication.pass)) return unauthorized();
+      // Type guard: sync authorizers take 2 args, async takes 3
+      const isSyncAuthorizer = (fn: AuthorizerFn | AsyncAuthorizerFn): fn is AuthorizerFn =>
+         fn.length <= 2;
+
+      if (isSyncAuthorizer(authorizer)) {
+         if (!authorizer(authentication.name, authentication.pass)) return unauthorized();
+      }
 
       return next();
    };

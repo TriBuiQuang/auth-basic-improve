@@ -103,9 +103,21 @@ describe("auth(req as Request)", () => {
 });
 
 describe("parse(string)", () => {
-   describe("with undefined string", () => {
-      it("should throw TypeError", () => {
-         expect(() => (parse as unknown as () => void)()).toThrow(/Expected a string/);
+   describe("with non-string input", () => {
+      it("should return undefined for null", () => {
+         expect(parse(null as unknown as string)).toStrictEqual(undefined);
+      });
+
+      it("should return undefined for undefined", () => {
+         expect(parse(undefined as unknown as string)).toStrictEqual(undefined);
+      });
+
+      it("should return undefined for a number", () => {
+         expect(parse(42 as unknown as string)).toStrictEqual(undefined);
+      });
+
+      it("should return undefined for an object", () => {
+         expect(parse({} as unknown as string)).toStrictEqual(undefined);
       });
    });
 

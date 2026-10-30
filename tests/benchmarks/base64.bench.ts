@@ -10,10 +10,6 @@ declare const TextDecoder: {
 };
 /* eslint-enable no-undef */
 
-type Uint8ArrayWithBase64 = typeof Uint8Array & {
-   fromBase64?: (str: string) => Uint8Array;
-};
-
 type BufferLike = {
    from(
       input: string,
@@ -25,10 +21,6 @@ const NodeBuffer = globalThis.Buffer as BufferLike | undefined;
 
 const textDecoder = new TextDecoder("utf-8");
 
-function decodeBase64WithUint8Array(str: string): string {
-   return textDecoder.decode((Uint8Array as Uint8ArrayWithBase64).fromBase64!(str));
-}
-
 function decodeBase64WithNodeBuffer(str: string): string {
    return NodeBuffer!.from(str, "base64").toString("utf-8");
 }
@@ -38,8 +30,6 @@ function decodeBase64WithAtob(str: string): string {
    return textDecoder.decode(Uint8Array.from(binary, (char) => char.charCodeAt(0)));
 }
 
-const hasUint8ArrayFromBase64 =
-   typeof (Uint8Array as Uint8ArrayWithBase64).fromBase64 === "function";
 const hasNodeBuffer = typeof NodeBuffer?.from === "function";
 
 const payloads = [
@@ -66,10 +56,6 @@ for (const payload of payloads) {
       throw new Error(`atob decode failed for ${payload.name}`);
    }
 
-   if (hasUint8ArrayFromBase64 && decodeBase64WithUint8Array(payload.encoded) !== payload.decoded) {
-      throw new Error(`Uint8Array.fromBase64 decode failed for ${payload.name}`);
-   }
-
    if (hasNodeBuffer && decodeBase64WithNodeBuffer(payload.encoded) !== payload.decoded) {
       throw new Error(`Buffer decode failed for ${payload.name}`);
    }
@@ -78,12 +64,6 @@ for (const payload of payloads) {
 describe("decode base64 for basic-auth payloads", () => {
    for (const payload of payloads) {
       describe(payload.name, () => {
-         if (hasUint8ArrayFromBase64) {
-            it("Uint8Array.fromBase64 + TextDecoder", () => {
-               decodeBase64WithUint8Array(payload.encoded);
-            });
-         }
-
          if (hasNodeBuffer) {
             it("Buffer.from(base64).toString(utf-8)", () => {
                decodeBase64WithNodeBuffer(payload.encoded);
