@@ -19,8 +19,16 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Install deps and build (with cache)
-        uses: bahmutov/npm-install@v1
+      - name: Set up Yarn
+        run: |
+          if ! command -v corepack >/dev/null 2>&1; then
+            npm install --global corepack@0.34.5
+          fi
+          corepack enable --install-directory "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies
+        run: yarn install --immutable
 
       - name: Lint
         run: yarn lint
